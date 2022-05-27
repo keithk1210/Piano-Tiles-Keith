@@ -39,13 +39,17 @@ class Song:
 
 class Tile(pygame.sprite.Sprite):
 	lastSpawnTime = 0
+	currentBeat = 0
+	lastBeatUpdate = 0
+	speed = 3
 	def __init__(self, x, y,height,horizontalPos,beat, win):
 		super(Tile, self).__init__()
 
 		self.win = win
 		self.x, self.y = x, y
-		self.color = WHITE
+		self.color = BLUE
 		self.ignore = False
+		self.rest = False
 
 		self.surface = pygame.Surface((TILE_WIDTH, height), pygame.SRCALPHA)
 		self.rect = self.surface.get_rect()
@@ -53,7 +57,7 @@ class Tile(pygame.sprite.Sprite):
 		self.rect.y = y
 		self.height = height
 		self.horizontalPos = horizontalPos
-		self.speed = 2
+		
 		self.beat = beat
 		
 
@@ -65,18 +69,19 @@ class Tile(pygame.sprite.Sprite):
 		self.rect.y += self.speed
 
 		if not self.ignore:
-			pygame.draw.rect(self.surface, self.color, (0,0, TILE_WIDTH, TILE_HEIGHT))
-			pygame.draw.rect(self.surface, PURPLE, (0,0, TILE_WIDTH, TILE_HEIGHT), 4)
-			pygame.draw.rect(self.surface, BLUE2, (0,0, TILE_WIDTH, TILE_HEIGHT), 2)
-			pygame.draw.line(self.surface, BLUE, self.line_start, self.line_end, 3)
-			pygame.draw.circle(self.surface, BLUE, self.center, 15, 3)
+			pygame.draw.rect(self.surface, self.color, (0,0, TILE_WIDTH, self.height),border_radius=25)
+		elif self.rest:
+			pygame.draw.rect(self.surface, SCREEN_COLOR, (0,0, TILE_WIDTH, self.height),border_radius=25)
 		else:
-			pygame.draw.rect(self.surface, PURPLE, (0,0, TILE_WIDTH, TILE_HEIGHT))
+			pygame.draw.rect(self.surface, PURPLE, (0,0, TILE_WIDTH, self.height),border_radius=25)
 
-			
+		
 		self.win.blit(self.surface, self.rect)
 	def setIgnore(self,ignore):
 		self.ignore = ignore
+
+	def nextBeat():
+		Tile.currentBeat += 1
 
 class Text(pygame.sprite.Sprite):
 	def __init__(self, text, font, pos, win):
@@ -145,6 +150,11 @@ class Button(pygame.sprite.Sprite):
 class Keyboard():
 	def __init__(self):
 		self.timeSinceLastKeyPress = 0
+		self.beat = 0
+	def nextBeat(self):
+		self.beat += 1
+	def getCurrentBeat(self):
+		return self.beat
 
     
 
