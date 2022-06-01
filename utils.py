@@ -42,3 +42,4 @@ def produceSound(notes,currentBeat):
             sound.play(max_amplitude = .1)
             if currentBeat - 1 > 0:
                 print("")
+

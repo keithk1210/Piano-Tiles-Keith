@@ -7,41 +7,11 @@ class Screen:
 		self.tiles = tiles
 		self.surface = surface
 
-
-class Note:
-    def __init__(self,frequency,midiNum,noteName):
-        self.frequency = frequency
-        self.midiNum = midiNum
-        self.noteName = noteName
-    def __eq__(self, obj) -> bool:
-        return isinstance(obj,Note) and self.noteName == obj.noteName
-
-class Chord:
-    def __init__(self,notes,duration):
-        self.notes = notes
-        self.duration = duration
-
-class Song:
-	def __init__(self,timeSignature,tempo,chords,name):
-		self.timeSignature = timeSignature
-		self.tempo = tempo
-		self.chords = chords
-		self.chordsReadable = []
-		self.name = name
-	def writeChordsReadable(self):
-		for i in range(0,len(self.chords)):
-			notesList = []
-			if i + 1 < len(self.chords):
-				notesList.append(self.chords[i+1].duration)
-			for j in range(0,len(self.chords[i].notes)):
-				notesList.append(self.chords[i].notes[j].noteName)
-			self.chordsReadable.append(notesList)
-
 class Tile(pygame.sprite.Sprite):
 	lastSpawnTime = 0
 	currentBeat = 0
 	lastBeatUpdate = 0
-	speed = 3
+	speed = 2
 	def __init__(self, x, y,height,horizontalPos,beat, win):
 		super(Tile, self).__init__()
 

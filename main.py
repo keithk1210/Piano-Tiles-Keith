@@ -26,9 +26,7 @@ pygame.init()
 FPS = 60
 clock = pygame.time.Clock()
 
-mid = MidiFile('C:\\Users\\keith\\coding-projects\\Python\\MIDO\\MIDI\\BrahmsLullaby.mid', clip=True)
 
-port = mido.open_output()
 
 win = pygame.display.set_mode((WIDTH,HEIGHT))
 win.fill(WHITE)
@@ -36,15 +34,14 @@ pygame.display.set_caption("Piano Tiles")
 
 
 
-song = createSong(mid)
+
 notes = []
 running = True
 noteSpawnDT = 0
 
 
-with open(f'songs/BrahmsLullaby.json', 'r') as openfile:
+with open("songs/MaryHadALittleLamb.json") as openfile:
     notes_dict = json.load(openfile)
-
 
 
 song.chordsReadable = notes_dict

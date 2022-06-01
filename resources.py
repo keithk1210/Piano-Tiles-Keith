@@ -1,6 +1,3 @@
-import pygame
-
-
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (30, 144, 255)
