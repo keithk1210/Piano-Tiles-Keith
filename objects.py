@@ -89,33 +89,32 @@ class Counter(pygame.sprite.Sprite):
 			self.win.blit(self.image, (WIDTH//2-16, HEIGHT//2-25))
 
 class Button(pygame.sprite.Sprite):
-	def __init__(self, img, scale, x, y):
+	def __init__(self, x, y,text,click_function):
 		super(Button, self).__init__()
 		
-		self.scale = scale
-		self.image = pygame.transform.scale(img, self.scale)
-		self.rect = self.image.get_rect()
+		self.surface = pygame.Surface((BUTTON_WIDTH, BUTTON_HEIGHT), pygame.SRCALPHA)
+		self.rect = self.surface.get_rect()
 		self.rect.x = x
 		self.rect.y = y
+		self.text = text
+		self.click_function = click_function
 
 		self.clicked = False
-
-	def update_image(self, img):
-		self.image = pygame.transform.scale(img, self.scale)
 
 	def draw(self, win):
 		action = False
 		pos = pygame.mouse.get_pos()
 		if self.rect.collidepoint(pos):
 			if pygame.mouse.get_pressed()[0] and not self.clicked:
+				self.click_function()
 				action = True
 				self.clicked = True
-
 			if not pygame.mouse.get_pressed()[0]:
 				self.clicked = False
-
-		win.blit(self.image, self.rect)
+		pygame.draw.rect(self.surface,PURPLE, (0,0,BUTTON_WIDTH,BUTTON_HEIGHT),border_radius=25)
+		win.blit(self.surface, self.rect)
 		return action
+
         
 class Keyboard():
 	def __init__(self):

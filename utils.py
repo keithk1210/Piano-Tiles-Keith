@@ -1,3 +1,4 @@
+import easygui
 from resources import *
 
 from objects import *
@@ -43,3 +44,5 @@ def produceSound(notes,currentBeat):
             if currentBeat - 1 > 0:
                 print("")
 
+def open_JSON_dir():
+    easygui.fileopenbox(msg="Please select a JSON file",default='songs\\*.json')
