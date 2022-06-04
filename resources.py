@@ -1,3 +1,5 @@
+import pygame
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (30, 144, 255)
@@ -15,6 +17,9 @@ SCREEN_COLOR = WHITE
 #Menu Info
 NUMBER_OF_BUTTONS = 1
 BUTTON_X = WIDTH // 2 - BUTTON_WIDTH //2
+
+#Font
+
 
 
 #Game

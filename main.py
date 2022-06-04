@@ -1,24 +1,17 @@
 from math import prod
-from threading import Thread
-import threading
 from tracemalloc import start
 from mido import MidiFile
 from numpy import append
-from framework_objects import GameState, GameStateManager
+from framework_objects import *
 from resources import *
 from pygame import *
 from objects import *
 from framework_objects import *
 from utils import *
-import mido
-import pygame
-import rtmidi
-import sys
-import time as pytime
-import json
-import gensound
-import random
 
+import pygame
+
+import time as pytime
 
 
 
@@ -42,14 +35,14 @@ noteSpawnDT = 0
 
 #game states
 
-
+#font
 
 
 
 #screen = Screen([createTile(win,notes[0][0] * song.timeSignature[1],0)],win)
-keyboard = Keyboard()
+#keyboard = Keyboard()
 game_state_manager = GameStateManager()
-menu_state = MenuState(win)
+menu_state = MenuState(win,game_state_manager)
 game_state_manager.add_state(menu_state)
 
 while running:
@@ -59,6 +52,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
+        game_state_manager.peek().event_loop_update(event)
             
     game_state_manager.peek().update()
     clock.tick(FPS)

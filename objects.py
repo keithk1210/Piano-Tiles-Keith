@@ -1,15 +1,29 @@
 from random import random
 from resources import *
 import pygame
-
+import copy
 class Screen:
 	def __init__(self,tiles,surface):
 		self.tiles = tiles
 		self.surface = surface
 
+class Measure:
+	def __init__(self,chords):
+		self.chords = chords
+
+class Song:
+    def __init__(self,timeSignature,tempo,name):
+        self.timeSignature = timeSignature
+        self.tempo = tempo
+        self.measuresReadable = []
+        self.chordsReadable = []
+        self.chords = []
+        self.name = name
+        self.measures = 0
+
 class Tile(pygame.sprite.Sprite):
 	lastSpawnTime = 0
-	currentBeat = 0
+	currentBeat = [0,0]
 	lastBeatUpdate = 0
 	speed = 2
 	def __init__(self, x, y,height,horizontalPos,beat, win):
@@ -18,6 +32,7 @@ class Tile(pygame.sprite.Sprite):
 		self.win = win
 		self.x, self.y = x, y
 		self.color = BLUE
+
 		self.ignore = False
 		self.rest = False
 
@@ -28,7 +43,7 @@ class Tile(pygame.sprite.Sprite):
 		self.height = height
 		self.horizontalPos = horizontalPos
 		
-		self.beat = beat
+		self.beat = beat #self.beat[0] -> measure, self.beat[1] --> beat in measure
 		
 
 		self.center = TILE_WIDTH//2, TILE_HEIGHT//2 + 15
@@ -50,8 +65,12 @@ class Tile(pygame.sprite.Sprite):
 	def setIgnore(self,ignore):
 		self.ignore = ignore
 
-	def nextBeat():
-		Tile.currentBeat += 1
+	def nextBeat(song):
+		if Tile.currentBeat[1] + 1 < song.timeSignature[0]:
+			Tile.currentBeat[1] += 1
+		else:
+			Tile.currentBeat[0] += 1
+			Tile.currentBeat[1] = 0
 
 class Text(pygame.sprite.Sprite):
 	def __init__(self, text, font, pos, win):
@@ -94,11 +113,13 @@ class Button(pygame.sprite.Sprite):
 		
 		self.surface = pygame.Surface((BUTTON_WIDTH, BUTTON_HEIGHT), pygame.SRCALPHA)
 		self.rect = self.surface.get_rect()
+		self.rect.center  = (WIDTH // 2, HEIGHT // 2)
 		self.rect.x = x
 		self.rect.y = y
-		self.text = text
+		self.font = pygame.font.Font(None,20)
+		self.text = self.font.render(text,True,BLUE,BLUE2)
+		self.text.get_rect().center = (WIDTH // 2, HEIGHT // 2)
 		self.click_function = click_function
-
 		self.clicked = False
 
 	def draw(self, win):
@@ -106,22 +127,26 @@ class Button(pygame.sprite.Sprite):
 		pos = pygame.mouse.get_pos()
 		if self.rect.collidepoint(pos):
 			if pygame.mouse.get_pressed()[0] and not self.clicked:
-				self.click_function()
 				action = True
 				self.clicked = True
+				return self.click_function()
 			if not pygame.mouse.get_pressed()[0]:
 				self.clicked = False
-		pygame.draw.rect(self.surface,PURPLE, (0,0,BUTTON_WIDTH,BUTTON_HEIGHT),border_radius=25)
-		win.blit(self.surface, self.rect)
+		win.blit(self.text,self.rect)
 		return action
 
         
-class Keyboard():
+class Keyboard:
 	def __init__(self):
 		self.timeSinceLastKeyPress = 0
-		self.beat = 0
-	def nextBeat(self):
-		self.beat += 1
+		self.beat = [0,0]
+	def nextBeat(self,song):
+		if self.beat[1] + 1 < song.timeSignature[0]:
+			self.beat[1] += 1
+		else:
+			self.beat[0] += 1
+			self.beat[1] = 0
+		
 	def getCurrentBeat(self):
 		return self.beat
 
