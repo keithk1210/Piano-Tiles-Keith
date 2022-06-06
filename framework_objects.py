@@ -43,7 +43,7 @@ class MenuState(GameState):
                 dict = {}
                 with open(json_path,"r") as openfile:
                     dict = json.load(openfile)
-                song = Song(dict["Info"][1],dict["Info"][0],None)
+                song = Song(dict["Info"][1][1],dict["Info"][0],None)
                 measures = []
                 for key in dict:
                     if key != "Info":
@@ -52,7 +52,7 @@ class MenuState(GameState):
                 time_signature_denominator = float(dict["Info"][1][1][1]) #dict["Info"][1][1][1] this accesses the lower number of the time signature. for example, the 4 in 3/4
                 song.measuresReadable = measures[0]
                 print(song.measuresReadable[0][1][0])
-                tile = createTile(self.win,song.measuresReadable[0][1][0] * time_signature_denominator,[0,0])
+                tile = createTile(self.win,song.measuresReadable[0][1][0] * time_signature_denominator,[0,0],song)
                 self.game_state_manager.add_state(PlayingState(song,Screen([tile],self.win),Keyboard(),self.game_state_manager))
 
     def event_loop_update(self, event):
@@ -74,7 +74,7 @@ class PlayingState(GameState):
             tile.update()
             print(Tile.currentBeat)
             if pygame.time.get_ticks()- Tile.lastSpawnTime > NOTE_SPAWN_DELAY and abs(tile.rect.y) <= tile.speed/2: #if the tile has passed the threshold at the bottom of the screen spawn another one
-                self.screen.tiles.append(createTile(self.screen.surface,self.measures[Tile.currentBeat[0]].chords[Tile.currentBeat[1]] * self.song.timeSignature[1],Tile.currentBeat,self.notes,self.keyboard))
+                self.screen.tiles.append(createTile(self.screen.surface,self.measures[Tile.currentBeat[0]].chords[Tile.currentBeat[1]][0] * self.song.timeSignature[1],Tile.currentBeat,self.song,self.measures,self.keyboard))
                 Tile.lastSpawnTime = pygame.time.get_ticks()
             if not tile.ignore and tile.rect.top > HEIGHT: #if the player has not interacted with a certain tile and it has passed the threshold, then the player has lost
                 #print(tile.rect.y)
@@ -91,29 +91,33 @@ class PlayingState(GameState):
                         if tile.rect.bottom >= HEIGHT and tile.rect.bottom <= HEIGHT + tile.height: #if the tile is near the bottom of the screen
                             if pygame.time.get_ticks() - self.keyboard.timeSinceLastKeyPress > KEY_PRESS_DELAY: #if enough time has passed
                                 if not tile.ignore: #this is just to avoid unecessary stuff
+                                    print(self.keyboard)
+                                    print("keyboard get current beat %s" % (self.keyboard.getCurrentBeat()))
+                                    print("keborad[0] %d" % (self.keyboard.getCurrentBeat()[0]))
+                                    print("keyboard[1] %d" % (self.keyboard.getCurrentBeat()[1]))
                                     if tile.horizontalPos == 0 and event.key == pygame.K_q:
-                                        print(self.song.measures[self.keyboard.getCurrentBeat()[0]][self.keyboard.getCurrentBeat()[1]])
+                                        print(self.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]])
                                         tile.setIgnore(True)
-                                        produceSound(self.song.measures,self.keyboard.getCurrentBeat())
-                                        self.keyboard.nextBeat()
+                                        produceSound(self.measures,self.keyboard.getCurrentBeat())
+                                        self.keyboard.nextBeat(self.song)
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
                                     elif tile.horizontalPos == 1 and event.key == pygame.K_w:
-                                        print(self.song.measures[self.keyboard.getCurrentBeat()[0]][self.keyboard.getCurrentBeat()[1]])
+                                        print(self.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]])
                                         tile.setIgnore(True)
-                                        produceSound(self.song.measures,self.keyboard.getCurrentBeat())
-                                        self.keyboard.nextBeat()
+                                        produceSound(self.measures,self.keyboard.getCurrentBeat())
+                                        self.keyboard.nextBeat(self.song)
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
                                     elif tile.horizontalPos == 2 and event.key == pygame.K_e:
-                                        print(self.song.measures[self.keyboard.getCurrentBeat()[0]][self.keyboard.getCurrentBeat()[1]])
+                                        print(self.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]])
                                         tile.setIgnore(True)
-                                        produceSound(self.song.measures,self.keyboard.getCurrentBeat())
-                                        self.keyboard.nextBeat()
+                                        produceSound(self.measures,self.keyboard.getCurrentBeat())
+                                        self.keyboard.nextBeat(self.song)
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
                                     elif tile.horizontalPos == 3 and event.key == pygame.K_r:
-                                        print(self.song.measures[self.keyboard.getCurrentBeat()[0]][self.keyboard.getCurrentBeat()[1]])
+                                        print(self.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]])
                                         tile.setIgnore(True)
-                                        produceSound(self.song.measures,self.keyboard.getCurrentBeat())
-                                        self.keyboard.nextBeat()
+                                        produceSound(self.measures,self.keyboard.getCurrentBeat())
+                                        self.keyboard.nextBeat(self.song)
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
             
 

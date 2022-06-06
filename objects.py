@@ -24,6 +24,8 @@ class Song:
 class Tile(pygame.sprite.Sprite):
 	lastSpawnTime = 0
 	currentBeat = [0,0]
+	#Tile.currentBeat[0] represents the current MEASURE
+	#Tile.currentBeat[1] represents the current beat within that measure
 	lastBeatUpdate = 0
 	speed = 2
 	def __init__(self, x, y,height,horizontalPos,beat, win):
@@ -66,11 +68,12 @@ class Tile(pygame.sprite.Sprite):
 		self.ignore = ignore
 
 	def nextBeat(song):
-		if Tile.currentBeat[1] + 1 < song.timeSignature[0]:
+		print("%s song.timeSignature[0]" % (song.timeSignature[0]))
+		if Tile.currentBeat[1] + 1 <= song.timeSignature[0]:
 			Tile.currentBeat[1] += 1
 		else:
 			Tile.currentBeat[0] += 1
-			Tile.currentBeat[1] = 0
+			Tile.currentBeat[1] = 1
 
 class Text(pygame.sprite.Sprite):
 	def __init__(self, text, font, pos, win):
@@ -139,13 +142,13 @@ class Button(pygame.sprite.Sprite):
 class Keyboard:
 	def __init__(self):
 		self.timeSinceLastKeyPress = 0
-		self.beat = [0,0]
+		self.beat = [0,1]
 	def nextBeat(self,song):
-		if self.beat[1] + 1 < song.timeSignature[0]:
+		if self.beat[1] + 1 <= song.timeSignature[0]:
 			self.beat[1] += 1
 		else:
 			self.beat[0] += 1
-			self.beat[1] = 0
+			self.beat[1] = 1
 		
 	def getCurrentBeat(self):
 		return self.beat

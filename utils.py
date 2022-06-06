@@ -5,11 +5,13 @@ from objects import *
 import gensound
 import random
 
-def createTile(win,noteValue,beat,measures=None,keyboard=None): #this method is important because it advanctes the beat of the tile
-    Tile.nextBeat()
+def createTile(win,noteValue,beat,song,measures=None,keyboard=None): #this method is important because it advanctes the beat of the tile
+    Tile.nextBeat(song)
+    print("note value %s " % (noteValue))
     if measures is not None and keyboard is not None:
         if beat[0] < len(measures):
-            if len(measures[beat[0]][beat[1]]) == 1:
+            if len(measures[beat[0]].chords[beat[1]]) == 1:
+                
                 height = noteValue * TILE_HEIGHT
                 horizontalPos = random.randint(0,3)
                 x = horizontalPos * TILE_WIDTH
@@ -32,7 +34,7 @@ def createTile(win,noteValue,beat,measures=None,keyboard=None): #this method is 
     return Tile(x,y,height,horizontalPos,beat,win)
 
 def produceSound(measures,currentBeat):
-    chord = measures[currentBeat[0]][currentBeat[1]]
+    chord = measures[currentBeat[0]].chords[currentBeat[1]][1:len(measures[currentBeat[0]].chords[currentBeat[1]])]
     sound = gensound.Triangle(0,0)
     
     for note in chord:
@@ -41,8 +43,6 @@ def produceSound(measures,currentBeat):
     if len(chord) > 0:
         if chord[0]:
             sound.play(max_amplitude = .1)
-            if currentBeat - 1 > 0:
-                print("")
 
 def open_JSON_dir():
     return easygui.fileopenbox(msg="Please select a JSON file",default='songs\\*.json')
