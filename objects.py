@@ -12,18 +12,18 @@ class Measure:
 		self.chords = chords
 
 class Song:
-    def __init__(self,timeSignature,tempo,name):
-        self.timeSignature = timeSignature
-        self.tempo = tempo
-        self.measuresReadable = []
-        self.chordsReadable = []
-        self.chords = []
-        self.name = name
-        self.measures = 0
+	def __init__(self,timeSignature,tempo,name):
+		self.timeSignature = timeSignature
+		self.tempo = tempo
+		self.chordsReadable = []
+		self.measures_readable = []
+		self.chords = []
+		self.name = name
+		self.measures = []
 
 class Tile(pygame.sprite.Sprite):
 	lastSpawnTime = 0
-	currentBeat = [0,0]
+	currentBeat = [0,0] #should be actually called current chord because beats are irrevelant with this number
 	#Tile.currentBeat[0] represents the current MEASURE
 	#Tile.currentBeat[1] represents the current beat within that measure
 	lastBeatUpdate = 0
@@ -67,13 +67,16 @@ class Tile(pygame.sprite.Sprite):
 	def setIgnore(self,ignore):
 		self.ignore = ignore
 
-	def nextBeat(song):
+	def next_chord(song):
 		print("%s song.timeSignature[0]" % (song.timeSignature[0]))
-		if Tile.currentBeat[1] + 1 <= song.timeSignature[0]:
+		print(Tile.currentBeat[1])
+		print(song.measures)
+		print(song.measures[Tile.currentBeat[0]].chords)
+		if Tile.currentBeat[1] + 1 < len(song.measures[Tile.currentBeat[0]].chords)-1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
 			Tile.currentBeat[1] += 1
-		else:
+		elif Tile.currentBeat[0] + 1 < len(song.measures):
 			Tile.currentBeat[0] += 1
-			Tile.currentBeat[1] = 1
+			Tile.currentBeat[1] = 0
 
 class Text(pygame.sprite.Sprite):
 	def __init__(self, text, font, pos, win):
@@ -142,13 +145,13 @@ class Button(pygame.sprite.Sprite):
 class Keyboard:
 	def __init__(self):
 		self.timeSinceLastKeyPress = 0
-		self.beat = [0,1]
-	def nextBeat(self,song):
-		if self.beat[1] + 1 <= song.timeSignature[0]:
+		self.beat = [0,0]
+	def next_chord(self,song):
+		if self.beat[1] + 1 < len(song.measures[self.beat[0]].chords) - 1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
 			self.beat[1] += 1
-		else:
+		elif self.beat[0] + 1 < len(song.measures):
 			self.beat[0] += 1
-			self.beat[1] = 1
+			self.beat[1] = 0
 		
 	def getCurrentBeat(self):
 		return self.beat

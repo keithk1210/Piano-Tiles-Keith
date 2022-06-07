@@ -13,7 +13,8 @@ import pygame
 
 import time as pytime
 
-
+#TODO
+#issues arise near the end of a song for some reason
 
 pygame.init()
 
@@ -53,8 +54,9 @@ while running:
             if event.key == pygame.K_ESCAPE:
                 running = False
         game_state_manager.peek().event_loop_update(event)
-            
-    game_state_manager.peek().update()
+        
+    if not game_state_manager.peek().update():
+       running = False
     clock.tick(FPS)
     pygame.display.update()
     win.fill(WHITE)
