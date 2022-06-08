@@ -12,9 +12,9 @@ class Measure:
 		self.chords = chords
 
 class Song:
-	def __init__(self,timeSignature,tempo,name):
+	def __init__(self,timeSignature,bpm,name):
 		self.timeSignature = timeSignature
-		self.tempo = tempo
+		self.bpm = bpm
 		self.chordsReadable = []
 		self.measures_readable = []
 		self.chords = []
@@ -23,12 +23,12 @@ class Song:
 
 class Tile(pygame.sprite.Sprite):
 	lastSpawnTime = 0
-	currentBeat = [0,0] #should be actually called current chord because beats are irrevelant with this number
-	#Tile.currentBeat[0] represents the current MEASURE
-	#Tile.currentBeat[1] represents the current beat within that measure
+	current_chord = [0,0] #should be actually called current chord because beats are irrevelant with this number
+	#Tile.current_chord[0] represents the current MEASURE
+	#Tile.current_chord[1] represents the current beat within that measure
 	lastBeatUpdate = 0
 	speed = 2
-	def __init__(self, x, y,height,horizontalPos,beat, win):
+	def __init__(self, x, y,height,horizontalPos,chord, win):
 		super(Tile, self).__init__()
 
 		self.win = win
@@ -45,7 +45,7 @@ class Tile(pygame.sprite.Sprite):
 		self.height = height
 		self.horizontalPos = horizontalPos
 		
-		self.beat = beat #self.beat[0] -> measure, self.beat[1] --> beat in measure
+		self.chord = chord #self.beat[0] -> measure, self.beat[1] --> beat in measure
 		
 
 		self.center = TILE_WIDTH//2, TILE_HEIGHT//2 + 15
@@ -68,15 +68,11 @@ class Tile(pygame.sprite.Sprite):
 		self.ignore = ignore
 
 	def next_chord(song):
-		print("%s song.timeSignature[0]" % (song.timeSignature[0]))
-		print(Tile.currentBeat[1])
-		print(song.measures)
-		print(song.measures[Tile.currentBeat[0]].chords)
-		if Tile.currentBeat[1] + 1 < len(song.measures[Tile.currentBeat[0]].chords)-1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
-			Tile.currentBeat[1] += 1
-		elif Tile.currentBeat[0] + 1 < len(song.measures):
-			Tile.currentBeat[0] += 1
-			Tile.currentBeat[1] = 0
+		if Tile.current_chord[1] + 1 < len(song.measures[Tile.current_chord[0]].chords)-1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
+			Tile.current_chord[1] += 1
+		elif Tile.current_chord[0] + 1 < len(song.measures):
+			Tile.current_chord[0] += 1
+			Tile.current_chord[1] = 0
 
 class Text(pygame.sprite.Sprite):
 	def __init__(self, text, font, pos, win):
@@ -145,16 +141,16 @@ class Button(pygame.sprite.Sprite):
 class Keyboard:
 	def __init__(self):
 		self.timeSinceLastKeyPress = 0
-		self.beat = [0,0]
+		self.current_chord = [0,0]
 	def next_chord(self,song):
-		if self.beat[1] + 1 < len(song.measures[self.beat[0]].chords) - 1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
-			self.beat[1] += 1
-		elif self.beat[0] + 1 < len(song.measures):
-			self.beat[0] += 1
-			self.beat[1] = 0
+		if self.current_chord[1] + 1 < len(song.measures[self.current_chord[0]].chords) - 1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
+			self.current_chord[1] += 1
+		elif self.current_chord[0] + 1 < len(song.measures):
+			self.current_chord[0] += 1
+			self.current_chord[1] = 0
 		
 	def getCurrentBeat(self):
-		return self.beat
+		return self.current_chord
 
     
 

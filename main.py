@@ -14,11 +14,12 @@ import pygame
 import time as pytime
 
 #TODO
-#issues arise near the end of a song for some reason
+#issues arise near the end of a song for some reason 
+#improve playability - the window to make a note sound is too short
+#add a menu and something that lets you restart the level
+#make it look better
 
 pygame.init()
-
-FPS = 60
 clock = pygame.time.Clock()
 
 
@@ -53,7 +54,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
-        game_state_manager.peek().event_loop_update(event)
+        game_state_manager.peek().event_loop_update(event) 
         
     if not game_state_manager.peek().update():
        running = False
@@ -62,6 +63,4 @@ while running:
     win.fill(WHITE)
 
 pygame.quit()
-
-
 

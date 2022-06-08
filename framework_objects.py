@@ -39,11 +39,11 @@ class MenuState(GameState):
         for button in self.buttons:
             json_path = button.draw(self.win)
             if json_path:
-                print(json_path)
                 dict = {}
                 with open(json_path,"r") as openfile:
                     dict = json.load(openfile)
-                song = Song(dict["Info"][1][1],dict["Info"][0],None)
+                song = Song(dict["Info"][1][1],dict["Info"][0][1],None) 
+                Tile.speed = get_tile_speed(song.bpm,TILE_HEIGHT) #after the songs BPM has been figured out establish tile speed/AKA BPM
                 measures = []
                 for key in dict:
                     if key != "Info":
@@ -71,13 +71,11 @@ class PlayingState(GameState):
         for tile in self.screen.tiles:
             tile.update()
             if pygame.time.get_ticks()- Tile.lastSpawnTime > NOTE_SPAWN_DELAY and abs(tile.rect.y) <= tile.speed/2: #if the tile has passed the threshold at the bottom of the screen spawn another one
-                if Tile.currentBeat[0] < len(self.song.measures) and Tile.currentBeat[1] < len(self.song.measures[Tile.currentBeat[0]].chords):
-                    print("tile current beat %s" % (Tile.currentBeat) )
-                    self.screen.tiles.append(createTile(self.screen.surface,self.song.measures[Tile.currentBeat[0]].chords[Tile.currentBeat[1]+1][0] * self.song.timeSignature[1],Tile.currentBeat,self.song,self.song.measures,self.keyboard))
+                if Tile.current_chord[0] < len(self.song.measures) and Tile.current_chord[1]+1 < len(self.song.measures[Tile.current_chord[0]].chords):
+                    #print("tile current beat %s" % (Tile.current_chord) )
+                    self.screen.tiles.append(createTile(self.screen.surface,self.song.measures[Tile.current_chord[0]].chords[Tile.current_chord[1]+1][0] * self.song.timeSignature[1],Tile.current_chord,self.song,self.song.measures,self.keyboard))
                     Tile.lastSpawnTime = pygame.time.get_ticks()
             if not tile.ignore and tile.rect.top > HEIGHT: #if the player has not interacted with a certain tile and it has passed the threshold, then the player has lost
-                #print(tile.rect.y)
-                #print(tile)
                 print("You lose!")
                 return False
             if tile.rest and abs(HEIGHT - tile.rect.top) <= tile.speed/2 and pygame.time.get_ticks() - Tile.lastBeatUpdate > BEAT_UPDATE_DELAY: #if a rest cross the threshold, still advance the song
