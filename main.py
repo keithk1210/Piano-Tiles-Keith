@@ -18,6 +18,7 @@ import time as pytime
 #improve playability - the window to make a note sound is too short
 #add a menu and something that lets you restart the level
 #make it look better
+#-main menu looks bad
 
 pygame.init()
 clock = pygame.time.Clock()

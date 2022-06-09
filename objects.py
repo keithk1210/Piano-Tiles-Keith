@@ -15,6 +15,7 @@ class Song:
 	def __init__(self,timeSignature,bpm,name):
 		self.timeSignature = timeSignature
 		self.bpm = bpm
+		self.beats_per_second = bpm / 60
 		self.chordsReadable = []
 		self.measures_readable = []
 		self.chords = []
@@ -56,11 +57,11 @@ class Tile(pygame.sprite.Sprite):
 		self.rect.y += self.speed
 
 		if not self.ignore:
-			pygame.draw.rect(self.surface, self.color, (0,0, TILE_WIDTH, self.height),border_radius=25)
+			pygame.draw.rect(self.surface, self.color, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
 		elif self.rest:
-			pygame.draw.rect(self.surface, SCREEN_COLOR, (0,0, TILE_WIDTH, self.height),border_radius=25)
+			pygame.draw.rect(self.surface, SCREEN_COLOR, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
 		else:
-			pygame.draw.rect(self.surface, PURPLE, (0,0, TILE_WIDTH, self.height),border_radius=25)
+			pygame.draw.rect(self.surface, PURPLE, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
 
 		
 		self.win.blit(self.surface, self.rect)
@@ -110,21 +111,18 @@ class Counter(pygame.sprite.Sprite):
 			self.win.blit(self.image, (WIDTH//2-16, HEIGHT//2-25))
 
 class Button(pygame.sprite.Sprite):
-	def __init__(self, x, y,text,click_function):
+	def __init__(self,text,click_function):
 		super(Button, self).__init__()
 		
-		self.surface = pygame.Surface((BUTTON_WIDTH, BUTTON_HEIGHT), pygame.SRCALPHA)
-		self.rect = self.surface.get_rect()
-		self.rect.center  = (WIDTH // 2, HEIGHT // 2)
-		self.rect.x = x
-		self.rect.y = y
-		self.font = pygame.font.Font(None,20)
-		self.text = self.font.render(text,True,BLUE,BLUE2)
-		self.text.get_rect().center = (WIDTH // 2, HEIGHT // 2)
+		self.color = BLUE2
+		self.font = pygame.font.Font(None,30)
+		self.text = self.font.render(text,True,BLUE,None)
+		self.text_x = BUTTON_X + BUTTON_WIDTH // 2 -  self.font.size(text)[0] // 2
+		self.text_y = BUTTON_Y + BUTTON_HEIGHT // 2 - self.font.size(text)[1] // 2
 		self.click_function = click_function
 		self.clicked = False
 
-	def draw(self, win):
+	def draw(self, y):
 		action = False
 		pos = pygame.mouse.get_pos()
 		if self.rect.collidepoint(pos):
@@ -134,8 +132,22 @@ class Button(pygame.sprite.Sprite):
 				return self.click_function()
 			if not pygame.mouse.get_pressed()[0]:
 				self.clicked = False
-		win.blit(self.text,self.rect)
+		pygame.draw.rect(win,self.color,(BUTTON_X,BUTTON_Y,BUTTON_WIDTH,BUTTON_HEIGHT),border_radius=50)
+		win.blit(self.text,(self.text_x,self.text_y))
 		return action
+
+class TextDisplay(pygame.sprite.Sprite):
+	def __init__(self,text):
+		self.text = text
+		self.font = pygame.font.Font(None,30)
+		self.text = self.font.render(text,True,BLUE,None)
+
+		self.x = WIDTH//2 - self.font.size(text)[0] // 2
+		self.y = 54
+
+	def draw(self,win):
+
+
 
         
 class Keyboard:
