@@ -4,6 +4,7 @@ from resources import *
 from objects import *
 import gensound
 import random
+from utils import *
 
 def createTile(win,noteValue,beat,song,measures=None,keyboard=None): #this method is important because it advanctes the beat of the tile
     print("---")
@@ -17,7 +18,7 @@ def createTile(win,noteValue,beat,song,measures=None,keyboard=None): #this metho
                 horizontalPos = random.randint(0,3)
                 x = horizontalPos * TILE_WIDTH
                 y = -height
-                tile = Tile(x,y,height,horizontalPos,beat,win)
+                tile = Tile(x,y,height,horizontalPos,beat,get_random_color(),win)
                 tile.color = SCREEN_COLOR
                 tile.rest = True
                 tile.ignore = True
@@ -30,14 +31,14 @@ def createTile(win,noteValue,beat,song,measures=None,keyboard=None): #this metho
                 x = horizontalPos * TILE_WIDTH
                 y = -height
                 Tile.next_chord(song)
-                return Tile(x,y,height,horizontalPos,beat,win)
+                return Tile(x,y,height,horizontalPos,beat,get_random_color(),win)
     print("IN THE OTHER OTHER ONE note value %f" % (noteValue))
     height = noteValue * TILE_HEIGHT
     horizontalPos = random.randint(0,3)
     x = horizontalPos * TILE_WIDTH
     y = -height
     Tile.next_chord(song)
-    return Tile(x,y,height,horizontalPos,beat,win)
+    return Tile(x,y,height,horizontalPos,beat,get_random_color(),win)
 
 def produceSound(song,current_chord):
     last_index = len(song.measures[current_chord[0]].chords[current_chord[1]+1])
@@ -61,5 +62,9 @@ def get_tile_speed(bpm,tile_height):
     pixel_per_frame = (tile_height) * (1/FPS) * (1/seconds_in_one_beat)
     return pixel_per_frame
 
+def get_random_color():
+    return RAINBOW[random.randint(0,len(RAINBOW)-1)]
+
 def open_JSON_dir():
     return easygui.fileopenbox(msg="Please select a JSON file",default='songs\\*.json')
+

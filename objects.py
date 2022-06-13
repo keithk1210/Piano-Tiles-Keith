@@ -1,7 +1,9 @@
 from random import random
 from resources import *
+from utils import *
 import pygame
 import copy
+import abc
 class Screen:
 	def __init__(self,tiles,surface):
 		self.tiles = tiles
@@ -29,12 +31,12 @@ class Tile(pygame.sprite.Sprite):
 	#Tile.current_chord[1] represents the current beat within that measure
 	lastBeatUpdate = 0
 	speed = 2
-	def __init__(self, x, y,height,horizontalPos,chord, win):
+	def __init__(self, x, y,height,horizontalPos,chord,color,win):
 		super(Tile, self).__init__()
 
 		self.win = win
 		self.x, self.y = x, y
-		self.color = BLUE
+		self.color = color
 
 		self.ignore = False
 		self.rest = False
@@ -61,7 +63,7 @@ class Tile(pygame.sprite.Sprite):
 		elif self.rest:
 			pygame.draw.rect(self.surface, SCREEN_COLOR, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
 		else:
-			pygame.draw.rect(self.surface, PURPLE, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
+			pygame.draw.rect(self.surface, SCREEN_COLOR, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
 
 		
 		self.win.blit(self.surface, self.rect)
@@ -110,44 +112,84 @@ class Counter(pygame.sprite.Sprite):
 			self.image = self.font.render(f'{self.count}', True, (255, 255, 255))
 			self.win.blit(self.image, (WIDTH//2-16, HEIGHT//2-25))
 
-class Button(pygame.sprite.Sprite):
-	def __init__(self,text,click_function):
-		super(Button, self).__init__()
-		
+class ScreenElement(pygame.sprite.Sprite,metaclass=abc.ABCMeta):
+	BUTTON_X = WIDTH // 2 - BUTTON_WIDTH //2 #this should be a class member of Button
+	def __init__(self,y_pos):
+		super().__init__()
+		self.y_pos = y_pos
+
+
+class Button(ScreenElement):
+	def __init__(self,text,y_pos,win,click_function):
+		super().__init__(y_pos)
+		self.BUTTON_Y = y_pos * PADDING
+		self.rect = pygame.Rect(ScreenElement.BUTTON_X,self.BUTTON_Y,BUTTON_WIDTH,BUTTON_HEIGHT)
 		self.color = BLUE2
 		self.font = pygame.font.Font(None,30)
 		self.text = self.font.render(text,True,BLUE,None)
-		self.text_x = BUTTON_X + BUTTON_WIDTH // 2 -  self.font.size(text)[0] // 2
-		self.text_y = BUTTON_Y + BUTTON_HEIGHT // 2 - self.font.size(text)[1] // 2
+		self.text_x = ScreenElement.BUTTON_X + BUTTON_WIDTH // 2 -  self.font.size(text)[0] // 2
+		self.text_y = (y_pos) * PADDING + BUTTON_HEIGHT // 2 - self.font.size(text)[1] // 2
 		self.click_function = click_function
+		self.win = win
 		self.clicked = False
 
-	def draw(self, y):
-		action = False
-		pos = pygame.mouse.get_pos()
-		if self.rect.collidepoint(pos):
-			if pygame.mouse.get_pressed()[0] and not self.clicked:
-				action = True
-				self.clicked = True
-				return self.click_function()
-			if not pygame.mouse.get_pressed()[0]:
-				self.clicked = False
-		pygame.draw.rect(win,self.color,(BUTTON_X,BUTTON_Y,BUTTON_WIDTH,BUTTON_HEIGHT),border_radius=50)
-		win.blit(self.text,(self.text_x,self.text_y))
-		return action
+	def draw(self):		
+		pygame.draw.rect(self.win,self.color,self.rect,border_radius=50)
+		self.win.blit(self.text,(self.text_x,self.text_y))
 
-class TextDisplay(pygame.sprite.Sprite):
-	def __init__(self,text):
+	def return_click_function_val(self,game_state_manager=None,menu_state=None):
+		if menu_state and game_state_manager: #if the gamestatemanger and menu state are provided as inputs then this means the player wants to go back to the main menu
+			pos = pygame.mouse.get_pos()
+			if self.rect.collidepoint(pos):
+				if pygame.mouse.get_pressed()[0] and not self.clicked:
+					action = True
+					self.clicked = True
+					game_state_manager.clear_states()
+					game_state_manager.add_state(menu_state)
+				if not pygame.mouse.get_pressed()[0]:
+					self.clicked = False
+			
+		elif self.click_function:
+			action = False
+			pos = pygame.mouse.get_pos()
+			if self.rect.collidepoint(pos):
+				if pygame.mouse.get_pressed()[0] and not self.clicked:
+					action = True
+					self.clicked = True
+					return self.click_function()
+				if not pygame.mouse.get_pressed()[0]:
+					self.clicked = False
+
+
+class TextDisplay(ScreenElement):
+	def __init__(self,text,y_pos,win):
+		super().__init__(y_pos)
 		self.text = text
-		self.font = pygame.font.Font(None,30)
-		self.text = self.font.render(text,True,BLUE,None)
+		self.font = pygame.font.Font(None,100)
+		self.text = self.font.render(text,True,BLACK)
+		self.color = PURPLE
 
-		self.x = WIDTH//2 - self.font.size(text)[0] // 2
-		self.y = 54
+		self.win = win
+		self.text_x = WIDTH//2 - self.font.size(text)[0] // 2
+		self.text_y = (y_pos * PADDING) - self.font.size(text)[1] // 2
 
-	def draw(self,win):
+	def draw(self):
+		self.win.blit(self.text,(self.text_x,self.text_y))
 
+class ImageScreenElement(ScreenElement):
+	def __init__(self, y_pos,img_name,win):
+		super().__init__(y_pos)
 
+		self.win = win
+		self.image = pygame.image.load("images/%s" % (img_name))
+		self.scaled_height = PADDING
+		self.scaled_width = (self.image.get_width() / self.image.get_height()) * self.scaled_height
+		self.image = pygame.transform.scale(self.image,(self.scaled_width,self.scaled_height))
+		self.x = WIDTH//2 - self.scaled_width // 2
+		self.y = (y_pos * PADDING) - self.scaled_height // 2
+
+	def draw(self):
+		self.win.blit(self.image,(self.x,self.y))
 
         
 class Keyboard:

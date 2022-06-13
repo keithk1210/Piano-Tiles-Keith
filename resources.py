@@ -1,10 +1,19 @@
 import pygame
 
+RED  = (249,81,19)
+YELLOW = 	(255,228,2)
+GREEN = 	(85,226,131)
+BLUE = 	(17,130,253)
+PURPLE = (245,111,174)
+
+RAINBOW = (RED,YELLOW,GREEN,BLUE,PURPLE)
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-BLUE = (30, 144, 255)
+
 BLUE2 = (2, 239, 239)
 PURPLE = (191, 64, 191)
+INCORRECT_COLOR = (139, 0, 0) #dark red
  
 # Screen information
 SCREEN = WIDTH, HEIGHT = (288 * 2)  , 512 * 2
@@ -16,7 +25,6 @@ SCREEN_COLOR = WHITE
 
 #Menu Info
 NUMBER_OF_BUTTONS = 1
-BUTTON_X = WIDTH // 2 - BUTTON_WIDTH //2
 PADDING = HEIGHT // 7
 SCREEN_UNIT_DISTANCE = PADDING #the difference between elements on the screen
 

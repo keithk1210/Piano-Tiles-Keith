@@ -13,12 +13,20 @@ import pygame
 
 import time as pytime
 
-#TODO
-#issues arise near the end of a song for some reason 
-#improve playability - the window to make a note sound is too short
-#add a menu and something that lets you restart the level
+#TO DO:
+
+#improve playability
+    #the window to make a note sound is too short
+    #add a menu and something that lets you restart the level
+    #game over screen
+        #TO DO 
+            #game over screen randomly going back to menu screen w/o user input 
+    #issues arise near the end of a song for some reason 
 #make it look better
-#-main menu looks bad
+    #-main menu looks bad
+    #-maybe add random colors to the tiles
+#Fix ugly code
+    #clean up CreateTile method
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -56,9 +64,7 @@ while running:
             if event.key == pygame.K_ESCAPE:
                 running = False
         game_state_manager.peek().event_loop_update(event) 
-        
-    if not game_state_manager.peek().update():
-       running = False
+    game_state_manager.peek().update()
     clock.tick(FPS)
     pygame.display.update()
     win.fill(WHITE)
