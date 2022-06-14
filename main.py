@@ -20,13 +20,17 @@ import time as pytime
     #add a menu and something that lets you restart the level
     #game over screen
         #TO DO 
-            #game over screen randomly going back to menu screen w/o user input 
+            #main menu button on gameover screen just doenst work sometimes - seems to consistently take 2 clicks to work
     #issues arise near the end of a song for some reason 
 #make it look better
-    #-main menu looks bad
-    #-maybe add random colors to the tiles
-#Fix ugly code
+    #victory screen
+        #apparently i need to fix my song creator first - random empty arrays at the end of jingle bells
+
+
+#Fix unsavory code
     #clean up CreateTile method
+    #make everything snake_case
+    #lots of redundant code in the event update loop for the playing state
 
 pygame.init()
 clock = pygame.time.Clock()

@@ -12,6 +12,9 @@ class GameStateManager:
         self.states = []
     def add_state(self,state):
         self.states.append(state)
+        print("---")
+        for state in self.states:
+            print(state.__class__.__name__)
     def back_one_state(self):
         self.states.pop()
     def peek(self):
@@ -40,33 +43,32 @@ class MenuState(GameState):
         self.screen_elements.append(Button("OPEN JSON FILE",len(self.screen_elements)+1,self.win,open_JSON_dir))
         self.screen_elements.append(Button("SETTINGS",len(self.screen_elements)+1,self.win,None))
     def update(self):
-
         for element in self.screen_elements:
             element.draw()
-            if isinstance(element,Button):
-                
-                json_path = element.return_click_function_val()
-                if json_path:
-                    dict = {}
-                    with open(json_path,"r") as openfile:
-                        dict = json.load(openfile)
-                    song = Song(dict["Info"][1][1],dict["Info"][0][1],None) 
-                    Tile.speed = get_tile_speed(song.bpm,TILE_HEIGHT) #after the songs BPM has been figured out establish tile speed/AKA BPM
-                    measures = []
-                    for key in dict:
-                        if key != "Info":
-                            measures.append(dict[key])
-                    
-                    time_signature_denominator = float(dict["Info"][1][1][1]) #dict["Info"][1][1][1] this accesses the lower number of the time signature. for example, the 4 in 3/4
-                    song.measures_readable = measures[0]
-                    for i in range(0,len(song.measures_readable)):
-                        song.measures.append(Measure(song.measures_readable[i]))
-                    tile = createTile(self.win,song.measures_readable [0][1][0] * time_signature_denominator,[0,0],song)
-                    self.game_state_manager.add_state(PlayingState(song,Screen([tile],self.win),Keyboard(),self.game_state_manager))
-        return True
-
     def event_loop_update(self, event):
-        return super().event_loop_update(event)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for element in self.screen_elements:
+                if isinstance(element,Button):
+                    
+                    json_path = element.return_click_function_val()
+                    if json_path:
+                        dict = {}
+                        with open(json_path,"r") as openfile:
+                            dict = json.load(openfile)
+                        Tile.reset() #tile data has to be reset before a new song is made
+                        song = Song(dict["Info"][1][1],dict["Info"][0][1],None) 
+                        Tile.speed = get_tile_speed(song.bpm,TILE_HEIGHT) #after the songs BPM has been figured out establish tile speed/AKA BPM
+                        measures = []
+                        for key in dict:
+                            if key != "Info":
+                                measures.append(dict[key])
+                        
+                        time_signature_denominator = float(dict["Info"][1][1][1]) #dict["Info"][1][1][1] this accesses the lower number of the time signature. for example, the 4 in 3/4
+                        song.measures_readable = measures[0]
+                        for i in range(0,len(song.measures_readable)):
+                            song.measures.append(Measure(song.measures_readable[i]))
+                        tile = createTile(self.win,song.measures_readable [0][1][0] * time_signature_denominator,[0,0],song)
+                        self.game_state_manager.add_state(PlayingState(song,Screen([tile],self.win),Keyboard(),self.game_state_manager))
 
 class PlayingState(GameState):
     def __init__(self,song,screen,keyboard,game_state_manager) -> None:
@@ -74,6 +76,8 @@ class PlayingState(GameState):
         self.screen = screen
         self.keyboard = keyboard
         self.song = song
+        
+
         
     def update(self):
         for tile in self.screen.tiles:
@@ -101,25 +105,29 @@ class PlayingState(GameState):
                                         #print(self.song.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]+1]) 
                                         tile.setIgnore(True)
                                         produceSound(self.song,self.keyboard.getCurrentBeat())
-                                        self.keyboard.next_chord(self.song)
+                                        if self.keyboard.next_chord(self.song) == SONG_END_KEY:
+                                            print("YOU DID IT!")
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
                                     elif tile.horizontalPos == 1 and event.key == pygame.K_w:
                                         #print(self.song.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]+1])
                                         tile.setIgnore(True)
                                         produceSound(self.song,self.keyboard.getCurrentBeat())
-                                        self.keyboard.next_chord(self.song)
+                                        if self.keyboard.next_chord(self.song) == SONG_END_KEY:
+                                            print("YOU DID IT!")
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
                                     elif tile.horizontalPos == 2 and event.key == pygame.K_e:
                                         #print(self.song.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]+1])
                                         tile.setIgnore(True)
                                         produceSound(self.song,self.keyboard.getCurrentBeat())
-                                        self.keyboard.next_chord(self.song)
+                                        if self.keyboard.next_chord(self.song) == SONG_END_KEY:
+                                            print("YOU DID IT!")
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
                                     elif tile.horizontalPos == 3 and event.key == pygame.K_r:
                                        # print(self.song.measures[self.keyboard.getCurrentBeat()[0]].chords[self.keyboard.getCurrentBeat()[1]+1])
                                         tile.setIgnore(True)
                                         produceSound(self.song,self.keyboard.getCurrentBeat())
-                                        self.keyboard.next_chord(self.song)
+                                        if self.keyboard.next_chord(self.song) == SONG_END_KEY:
+                                            print("YOU DID IT!")
                                         self.keyboard.timeSinceLastKeyPress = pygame.time.get_ticks()
 
 class GameOverState(GameState):
@@ -130,18 +138,20 @@ class GameOverState(GameState):
         self.screen_elements = []
         self.screen_elements.append(ImageScreenElement(len(self.screen_elements)+1,"gameover.jpg",self.win))
         self.screen_elements.append(TextDisplay("GAME OVER",len(self.screen_elements)+1,self.win))
-        self.screen_elements.append(Button("RETRY?",len(self.screen_elements)+1,self.win,None))
+        self.screen_elements.append(Button("RETRY?",len(self.screen_elements)+1,self.win,placeholder()))
         self.screen_elements.append(Button("MAIN MENU",len(self.screen_elements)+1,self.win,None))
     def update(self):
         for element in self.screen_elements:
             element.draw()
-            if isinstance(element,Button): #is it a button?
-                if element.y_pos == GameOverState.MAIN_MENU_Y_POS:
-                    #this will clear the states stack and create a new main menu state
-                    element.return_click_function_val(self.game_state_manager,MenuState(self.win,self.game_state_manager))
+            
 
     def event_loop_update(self,event):
-        pass
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for element in self.screen_elements:
+                if isinstance(element,Button): #is it a button?
+                    if element.y_pos == GameOverState.MAIN_MENU_Y_POS:
+                        #this will clear the states stack and create a new main menu state
+                        element.return_click_function_val(self.game_state_manager,MenuState(self.win,self.game_state_manager))
 
             
 

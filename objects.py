@@ -71,11 +71,16 @@ class Tile(pygame.sprite.Sprite):
 		self.ignore = ignore
 
 	def next_chord(song):
+		print("tile current chord before next_chord %s" % (Tile.current_chord))
 		if Tile.current_chord[1] + 1 < len(song.measures[Tile.current_chord[0]].chords)-1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
 			Tile.current_chord[1] += 1
 		elif Tile.current_chord[0] + 1 < len(song.measures):
 			Tile.current_chord[0] += 1
 			Tile.current_chord[1] = 0
+		print("tile current chord after next_chord %s" % (Tile.current_chord))
+	def reset():
+		Tile.current_chord[0] = 0
+		Tile.current_chord[1] = 0
 
 class Text(pygame.sprite.Sprite):
 	def __init__(self, text, font, pos, win):
@@ -138,6 +143,7 @@ class Button(ScreenElement):
 		self.win.blit(self.text,(self.text_x,self.text_y))
 
 	def return_click_function_val(self,game_state_manager=None,menu_state=None):
+		print("left mouse button %s" % (pygame.mouse.get_pressed()[0]))
 		if menu_state and game_state_manager: #if the gamestatemanger and menu state are provided as inputs then this means the player wants to go back to the main menu
 			pos = pygame.mouse.get_pos()
 			if self.rect.collidepoint(pos):
@@ -146,19 +152,20 @@ class Button(ScreenElement):
 					self.clicked = True
 					game_state_manager.clear_states()
 					game_state_manager.add_state(menu_state)
+					return
 				if not pygame.mouse.get_pressed()[0]:
 					self.clicked = False
-			
-		elif self.click_function:
-			action = False
-			pos = pygame.mouse.get_pos()
-			if self.rect.collidepoint(pos):
-				if pygame.mouse.get_pressed()[0] and not self.clicked:
-					action = True
-					self.clicked = True
-					return self.click_function()
-				if not pygame.mouse.get_pressed()[0]:
-					self.clicked = False
+					return
+			return
+
+		pos = pygame.mouse.get_pos()
+		if self.rect.collidepoint(pos):
+			if pygame.mouse.get_pressed()[0] and not self.clicked:
+				action = True
+				self.clicked = True
+				return self.click_function()
+			if not pygame.mouse.get_pressed()[0]:
+				self.clicked = False
 
 
 class TextDisplay(ScreenElement):
