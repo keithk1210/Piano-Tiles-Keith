@@ -71,13 +71,13 @@ class Tile(pygame.sprite.Sprite):
 		self.ignore = ignore
 
 	def next_chord(song):
-		print("tile current chord before next_chord %s" % (Tile.current_chord))
+		#print("tile current chord before next_chord %s" % (Tile.current_chord))
 		if Tile.current_chord[1] + 1 < len(song.measures[Tile.current_chord[0]].chords)-1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
 			Tile.current_chord[1] += 1
 		elif Tile.current_chord[0] + 1 < len(song.measures):
 			Tile.current_chord[0] += 1
 			Tile.current_chord[1] = 0
-		print("tile current chord after next_chord %s" % (Tile.current_chord))
+		#print("tile current chord after next_chord %s" % (Tile.current_chord))
 	def reset():
 		Tile.current_chord[0] = 0
 		Tile.current_chord[1] = 0

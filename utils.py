@@ -11,7 +11,7 @@ def createTile(win,noteValue,beat,song,measures=None,keyboard=None): #this metho
     #print(beat)
     if measures is not None and keyboard is not None:
         if beat[0] < len(measures) and beat[1]+1 < len(measures[beat[0]].chords):
-            note_val = measures[beat[0]].chords[beat[1]+1][0] * song.timeSignature[1]
+            note_val = measures[beat[0]].chords[beat[1]+1][0]
             if len(measures[beat[0]].chords[beat[1]+1]) == 1: 
                 #print("IN!!! notevalue %f" % (note_val))
                 height = note_val * TILE_HEIGHT
