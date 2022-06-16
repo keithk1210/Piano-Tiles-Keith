@@ -1,9 +1,9 @@
 from random import random
 from resources import *
-from utils import *
 import pygame
 import copy
 import abc
+
 class Screen:
 	def __init__(self,tiles,surface):
 		self.tiles = tiles
@@ -31,6 +31,12 @@ class Tile(pygame.sprite.Sprite):
 	#Tile.current_chord[1] represents the current beat within that measure
 	lastBeatUpdate = 0
 	speed = 2
+
+	height_multiplier_index = 0
+	TILE_HEIGHT_MULTIPLIER_OPTIONS = [1,2,4,8,16,32,64]
+	height_multiplier = TILE_HEIGHT_MULTIPLIER_OPTIONS[height_multiplier_index]
+	tile_height =  (WIDTH // 4) * height_multiplier
+	
 	def __init__(self, x, y,height,horizontalPos,chord,color,win):
 		super(Tile, self).__init__()
 
@@ -51,7 +57,7 @@ class Tile(pygame.sprite.Sprite):
 		self.chord = chord #self.beat[0] -> measure, self.beat[1] --> beat in measure
 		
 
-		self.center = TILE_WIDTH//2, TILE_HEIGHT//2 + 15
+		self.center = TILE_WIDTH//2, Tile.tile_height//2 + 15
 		self.line_start = self.center[0], self.center[1]-18
 		self.line_end = self.center[0], 20
 
@@ -78,9 +84,25 @@ class Tile(pygame.sprite.Sprite):
 			Tile.current_chord[0] += 1
 			Tile.current_chord[1] = 0
 		#print("tile current chord after next_chord %s" % (Tile.current_chord))
+
 	def reset():
 		Tile.current_chord[0] = 0
 		Tile.current_chord[1] = 0
+
+	def next_multiplier_option(): #moves it along to the next 
+	
+		if Tile.height_multiplier_index + 1 < len(Tile.TILE_HEIGHT_MULTIPLIER_OPTIONS):
+			#print("in here")
+			Tile.height_multiplier_index += 1
+		else:
+			#print("in there")
+			Tile.height_multiplier_index = 0
+
+		Tile.height_multiplier = Tile.TILE_HEIGHT_MULTIPLIER_OPTIONS[Tile.height_multiplier_index]
+		Tile.tile_height = (WIDTH // 4) * Tile.height_multiplier
+		#print("tiLE HEIGHt in Tilenext_multiplier option %f" % (Tile.tile_height))
+
+	
 
 class Text(pygame.sprite.Sprite):
 	def __init__(self, text, font, pos, win):
@@ -141,7 +163,7 @@ class Button(ScreenElement):
 	def draw(self):		
 		pygame.draw.rect(self.win,self.color,self.rect,border_radius=50)
 		self.win.blit(self.text,(self.text_x,self.text_y))
-
+	"""
 	def return_click_function_val(self,game_state_manager=None,menu_state=None):
 		print("left mouse button %s" % (pygame.mouse.get_pressed()[0]))
 		if menu_state and game_state_manager: #if the gamestatemanger and menu state are provided as inputs then this means the player wants to go back to the main menu
@@ -166,6 +188,7 @@ class Button(ScreenElement):
 				return self.click_function()
 			if not pygame.mouse.get_pressed()[0]:
 				self.clicked = False
+	"""
 
 
 class TextDisplay(ScreenElement):

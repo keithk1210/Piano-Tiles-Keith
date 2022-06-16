@@ -22,6 +22,7 @@ import time as pytime
         #TO DO 
             #main menu button on gameover screen just doenst work sometimes - seems to consistently take 2 clicks to work
     #issues arise near the end of a song for some reason 
+    #slows down after a while
 #make it look better
     #victory screen
         #apparently i need to fix my song creator first - random empty arrays at the end of jingle bells
@@ -40,6 +41,9 @@ clock = pygame.time.Clock()
 win = pygame.display.set_mode((WIDTH,HEIGHT))
 win.fill(WHITE)
 pygame.display.set_caption("Piano Tiles")
+
+
+
 
 
 
