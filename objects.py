@@ -5,24 +5,114 @@ import copy
 import abc
 
 class Screen:
-	def __init__(self,tiles,surface):
-		self.tiles = tiles
+	def __init__(self,surface):
+		self.tiles = []
 		self.surface = surface
 
 class Measure:
-	def __init__(self,chords):
-		self.chords = chords
+    def __init__(self):
+        self.chords = []
+        self.shortest_rhythm_value = 9999
+class Chord:
+    def __init__(self):
+        self.notes = []
+        self.duration = None
+    def set_duration(self,new_dur):
+        self.duration = new_dur
+    def notes_as_str(self):
+        str = ""
+        for note in self.notes:
+            str += note.__str__()+ ", "
+        return str
+    def __str__(self) -> str:
+        return "Notes: [" + self.notes_as_str() + "]"
+class Note:
+    def __init__(self,name):
+        self.name = name
+        self.duration = None
+    def set_duration(self,new_dur):
+        self.duration = new_dur
+    def __str__(self):
+        return "Note name: " + self.name + " Duration: " + str(self.duration)
 
 class Song:
-	def __init__(self,timeSignature,bpm,name):
-		self.timeSignature = timeSignature
-		self.bpm = bpm
-		self.beats_per_second = bpm / 60
-		self.chordsReadable = []
-		self.measures_readable = []
-		self.chords = []
-		self.name = name
+	def __init__(self,tree,name):
+		#song creation -> write measures
+		self.tree = tree
+		self.root = tree.getroot()
+		self.bpm = None
+		self.beats_per_second = None
 		self.measures = []
+		self.name = name
+		self.selected_staff = 1
+		self.write_measures()
+
+	def get_rhythmic_val(self,type_str):
+		if type_str == "whole":
+			return 4
+		elif type_str == "half":
+			return 2
+		elif type_str == "quarter":
+			return 1
+		elif type_str == "eighth":
+			return .5
+		elif type_str == "16th":
+			return .25
+		elif type_str == "32nd":
+			return .125
+
+	def new_note_str(self,note):
+		new_note = ""
+		for pitch in note.iter("pitch"):
+			alter = 0
+			for step in note.iter("step"):
+				new_note += step.text
+			for accidental in pitch.iter("alter"):
+				if (int(accidental.text) == 1):
+					new_note += "#"
+					alter = int(accidental.text)
+				elif (int(accidental.text) == -1):
+					new_note += "b"
+					alter = int(accidental.text)
+			for octave in note.iter("octave"):
+				new_note += octave.text
+		return new_note
+
+	def write_measures(self):
+		time_sig = []
+		for measure in self.root.iter("measure"):
+			for attr in measure.iter("attributes"):
+				for time in attr.iter("time"):
+					for beats in time.iter("beats"):
+						time_sig.append(int(beats.text))
+					for beat_type in time.iter("beat-type"):
+						time_sig.append(int(beat_type.text))
+			new_measure = Measure()
+			new_chord = None
+			for note in measure.iterfind("note"):
+				if note.find("staff") != None: #check we're looking at the right staff
+					if int(note.find("staff").text) == self.selected_staff:
+						new_note = None
+						if note.find("rest") == None:
+							new_note = Note(self.new_note_str(note))
+						if note.find("type") != None and new_note:
+							current_duration = self.get_rhythmic_val(note.find("type").text)
+							#print("type: " + note.find("type").text + " current_duration: " + str(current_duration) + " adjusted duration: " +str(current_duration * (time_sig[1]/4)) )
+							new_note.set_duration(current_duration * (time_sig[1]/4))
+							if current_duration and current_duration < new_measure.shortest_rhythm_value:
+								new_measure.shortest_rhythm_value = current_duration
+						print(str(new_note) + " " + str(note.find("chord")))
+						if new_note and note.find("chord") == None:
+							new_chord = Chord()
+							new_chord.set_duration(new_note.duration)
+							new_chord.notes.append(new_note)
+							new_measure.chords.append(new_chord)
+						elif new_note:
+							new_measure.chords[len(new_measure.chords)-1].notes.append(new_note)
+			self.measures.append(new_measure)
+
+
+
 
 class Tile(pygame.sprite.Sprite):
 	lastSpawnTime = 0
@@ -78,7 +168,7 @@ class Tile(pygame.sprite.Sprite):
 
 	def next_chord(song):
 		#print("tile current chord before next_chord %s" % (Tile.current_chord))
-		if Tile.current_chord[1] + 1 < len(song.measures[Tile.current_chord[0]].chords)-1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
+		if Tile.current_chord[1] + 1 < len(song.measures[Tile.current_chord[0]].chords): 
 			Tile.current_chord[1] += 1
 		elif Tile.current_chord[0] + 1 < len(song.measures):
 			Tile.current_chord[0] += 1
@@ -227,13 +317,13 @@ class Keyboard:
 		self.timeSinceLastKeyPress = 0
 		self.current_chord = [0,0]
 	def next_chord(self,song):
-		if self.current_chord[1] + 1 < len(song.measures[self.current_chord[0]].chords) - 1: #subtract one because the array represending the notes of the chord holds info about how long the chord should be held.
+		if self.current_chord[1] + 1 < len(song.measures[self.current_chord[0]].chords): 
 			self.current_chord[1] += 1
 		elif self.current_chord[0] + 1 < len(song.measures):
 			self.current_chord[0] += 1
 			self.current_chord[1] = 0
 		
-	def getCurrentBeat(self):
+	def get_current_chord(self):
 		return self.current_chord
 
     

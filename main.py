@@ -2,15 +2,15 @@ from math import prod
 from tracemalloc import start
 from mido import MidiFile
 from numpy import append
-from framework_objects import *
-from resources import *
 from pygame import *
-from objects import *
 from framework_objects import *
 from utils import *
+import os
+import xml.etree.ElementTree as ET
+from processing import *
 
 import pygame
-
+import sys
 import time as pytime
 
 #TO DO:
@@ -33,24 +33,7 @@ import time as pytime
     #make everything snake_case
     #lots of redundant code in the event update loop for the playing state
 
-pygame.init()
-clock = pygame.time.Clock()
 
-
-
-win = pygame.display.set_mode((WIDTH,HEIGHT))
-win.fill(WHITE)
-pygame.display.set_caption("Piano Tiles")
-
-
-
-
-
-
-
-notes = []
-running = True
-noteSpawnDT = 0
 
 #game states
 
@@ -58,11 +41,66 @@ noteSpawnDT = 0
 
 
 
-#screen = Screen([createTile(win,notes[0][0] * song.timeSignature[1],0)],win)
-#keyboard = Keyboard()
+appdata = os.getenv("APPDATA")
+parent_dir = "XMLtoJSONConverter"
+output_dir = "output"
+music_xml_dir = "MusicXMLs"
+abs_parent_dir = appdata + "\\" + parent_dir
+abs_music_xml_dir = abs_parent_dir + "\\" + music_xml_dir
+abs_output_dir = abs_parent_dir + "\\" + output_dir
+
+
+#creates directory if not existent yet
+if not os.path.exists(abs_parent_dir):
+    os.mkdir(abs_parent_dir)
+if not os.path.exists(abs_output_dir):
+    os.mkdir(abs_output_dir)
+if not os.path.exists(abs_music_xml_dir):
+    os.mkdir(abs_music_xml_dir)
+
+xmls_in_dir = False
+
+#checks to see if XML dir is empty
+for file in os.listdir(abs_music_xml_dir):
+    if (len(file.split(".")) >= 2):
+        if (file.split('.')[1] == "musicxml"):
+            xmls_in_dir = True
+
+if not xmls_in_dir:
+    easygui.msgbox("No .musicxml files were found in MusicXMLs directory. Please insert .musicxmml files in this folder: \n%s." % (abs_music_xml_dir))
+    sys.exit()
+
+button_list = ("Open XML directory")
+
+userChoice = easygui.msgbox(msg="Welcome to Piano Tiles! Please select a MusicXML file to get started.")
+
+music_xml_file_name = easygui.fileopenbox(msg="Please select a MusicXML file",default=abs_music_xml_dir + '\\*.musicxml',filetypes=["*.musicxml"])
+
+tree = ET.parse(music_xml_file_name.replace("\\","\\\\"))
+root = tree.getroot()
+#song_name = easygui.enterbox("Enter the name of the JSON file you would like to create",title="Enter text")
+song = Song(tree,"song")
+
+#writeJSON(song)
+
+
+
+#########################
+
+
+pygame.init()
+clock = pygame.time.Clock()
+
+win = pygame.display.set_mode((WIDTH,HEIGHT))
+win.fill(WHITE)
+pygame.display.set_caption("Piano Tiles")
+
+notes = []
+running = True
+noteSpawnDT = 0
 game_state_manager = GameStateManager()
-menu_state = MenuState(win,game_state_manager)
-game_state_manager.add_state(menu_state)
+playing_state = PlayingState(song,Screen(win),Keyboard(),game_state_manager)
+game_state_manager.add_state(playing_state)
 
 while running:
     for event in pygame.event.get():
