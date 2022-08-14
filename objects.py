@@ -27,13 +27,28 @@ class Chord:
     def __str__(self) -> str:
         return "Notes: [" + self.notes_as_str() + "]"
 class Note:
-    def __init__(self,name):
-        self.name = name
-        self.duration = None
-    def set_duration(self,new_dur):
-        self.duration = new_dur
-    def __str__(self):
-        return "Note name: " + self.name + " Duration: " + str(self.duration)
+	def __init__(self,name):
+		self.name = name
+		self.duration = None
+	def set_duration(self,new_dur):
+		self.duration = new_dur
+	def get_enharmonic_equivalent(self):
+		if len(self.name) >= 3:
+			octave = self.name[2]
+			if self.name[0:2] == "Bb":
+				return "A#" + octave
+			elif self.name[0:2] == "Db":
+				return "C#" + octave
+			elif self.name[0:2] == "Eb":
+				return "D#" + octave
+			elif self.name[0:2] == "Gb":
+				return "F#" + octave
+			else:
+				return self.name
+		else:
+			return self.name
+	def __str__(self):
+		return "Note name: " + self.name + " Duration: " + str(self.duration)
 
 class Song:
 	def __init__(self,tree,name):

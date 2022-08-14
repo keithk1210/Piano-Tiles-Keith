@@ -1,3 +1,4 @@
+import winsound
 import easygui
 from resources import *
 
@@ -34,17 +35,17 @@ def create_tile(win,chord,beat,song,game_started): #this method is important bec
     return Tile(x,y,height,horizontalPos,chord,get_random_color(),win)
 
 def produce_sound(song,current_chord):
-    chord = song.measures[current_chord[0]].chords[current_chord[1]] #we add 1 to current_chord()[1] (which represents the current chord in the current measure) becauase the first value in the array for a measure is a string representing which measure the user is currently at and we dont want that
+    chord = song.measures[current_chord[0]].chords[current_chord[1]] 
+    """
     duration_in_beats =  chord.duration #the 0th index of a chord represents the duration of the chord in beats
     duration_in_seconds = (1 / (72 / 60)) * duration_in_beats
     duration_in_ms = float(duration_in_seconds * 1000)
     sound = gensound.Sawtooth(0,0)
+    """
+    winsound.PlaySound(None, winsound.SND_PURGE)
     for note in chord.notes:
         if note:
-            sound += gensound.Sawtooth(note.name,duration_in_ms)
-    if len(chord.notes) > 0:
-        if chord.notes[0]:
-            sound.play(max_amplitude = .1)
+            winsound.PlaySound("C:\\Users\\keith\\coding-projects\\Python\\sf2_loader_test\piano_keys\\" + note.get_enharmonic_equivalent() + ".wav",winsound.SND_ASYNC)
 
 
 def get_tile_speed(bpm,tile_height):
@@ -61,8 +62,4 @@ def open_JSON_dir():
 def update_text_on_text_display(text_display,text):
     text_display.text = pygame.font.Font(None,100).render(text,True,BLACK)
 
-
-
-def placeholder():
-    pass
 
