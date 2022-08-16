@@ -1,3 +1,4 @@
+import os
 import winsound
 import easygui
 from resources import *
@@ -32,7 +33,10 @@ def create_tile(win,chord,beat,song,game_started): #this method is important bec
     x = horizontalPos * TILE_WIDTH
     y = -height
     Tile.next_chord(song)
-    return Tile(x,y,height,horizontalPos,chord,get_random_color(),win)
+    if chord.notes[0].name == "Rest":
+        return Tile(x,y,height,horizontalPos,chord,SCREEN_COLOR,win,True)
+    else:
+        return Tile(x,y,height,horizontalPos,chord,get_random_color(),win,False)
 
 def produce_sound(song,current_chord):
     chord = song.measures[current_chord[0]].chords[current_chord[1]] 
@@ -45,13 +49,14 @@ def produce_sound(song,current_chord):
     winsound.PlaySound(None, winsound.SND_PURGE)
     for note in chord.notes:
         if note:
-            winsound.PlaySound("C:\\Users\\keith\\coding-projects\\Python\\sf2_loader_test\piano_keys\\" + note.get_enharmonic_equivalent() + ".wav",winsound.SND_ASYNC)
+            print("note name: " + note.name + " enharmonic equivalent: " + note.get_enharmonic_equivalent())
+            winsound.PlaySound("piano_keys\\" + note.get_enharmonic_equivalent() + ".wav",winsound.SND_ASYNC)
 
 
 def get_tile_speed(bpm,tile_height):
     seconds_in_one_beat = (1/bpm) * 60
     pixel_per_frame = (Tile.tile_height) * (1/FPS) * (1/seconds_in_one_beat)
-    return pixel_per_frame
+    return round(pixel_per_frame)
 
 def get_random_color():
     return RAINBOW[random.randint(0,len(RAINBOW)-1)]

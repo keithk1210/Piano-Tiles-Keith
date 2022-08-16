@@ -43,6 +43,8 @@ class Note:
 				return "D#" + octave
 			elif self.name[0:2] == "Gb":
 				return "F#" + octave
+			elif self.name[0:2] == "Ab":
+				return "G#" + octave
 			else:
 				return self.name
 		else:
@@ -55,7 +57,7 @@ class Song:
 		#song creation -> write measures
 		self.tree = tree
 		self.root = tree.getroot()
-		self.bpm = None
+		self.bpm = 120
 		self.beats_per_second = None
 		self.measures = []
 		self.name = name
@@ -102,21 +104,30 @@ class Song:
 						time_sig.append(int(beats.text))
 					for beat_type in time.iter("beat-type"):
 						time_sig.append(int(beat_type.text))
+			for sound in measure.iter("sound"):
+				if sound.attrib.__contains__("tempo") and self.bpm == 120:
+					self.bpm = int(sound.attrib["tempo"])
 			new_measure = Measure()
 			new_chord = None
 			for note in measure.iterfind("note"):
 				if note.find("staff") != None: #check we're looking at the right staff
 					if int(note.find("staff").text) == self.selected_staff:
 						new_note = None
-						if note.find("rest") == None:
+						if note.find("rest") == None and note.find("grace") == None:
 							new_note = Note(self.new_note_str(note))
+						elif note.find("rest") != None:
+							new_note = Note("Rest")
 						if note.find("type") != None and new_note:
 							current_duration = self.get_rhythmic_val(note.find("type").text)
 							#print("type: " + note.find("type").text + " current_duration: " + str(current_duration) + " adjusted duration: " +str(current_duration * (time_sig[1]/4)) )
-							new_note.set_duration(current_duration * (time_sig[1]/4))
+							multiplier = 1
+							if note.find("dot") != None:
+								multiplier = 1.5
+							new_note.set_duration(current_duration * (time_sig[1]/4) * multiplier)
+								
 							if current_duration and current_duration < new_measure.shortest_rhythm_value:
 								new_measure.shortest_rhythm_value = current_duration
-						print(str(new_note) + " " + str(note.find("chord")))
+						#print(str(new_note) + " " + str(note.find("chord")))
 						if new_note and note.find("chord") == None:
 							new_chord = Chord()
 							new_chord.set_duration(new_note.duration)
@@ -130,11 +141,11 @@ class Song:
 
 
 class Tile(pygame.sprite.Sprite):
-	lastSpawnTime = 0
+	last_spawn_time = 0
 	current_chord = [0,0] #should be actually called current chord because beats are irrevelant with this number
 	#Tile.current_chord[0] represents the current MEASURE
 	#Tile.current_chord[1] represents the current beat within that measure
-	lastBeatUpdate = 0
+	last_beat_update = 0
 	speed = 2
 
 	height_multiplier_index = 0
@@ -142,7 +153,7 @@ class Tile(pygame.sprite.Sprite):
 	height_multiplier = TILE_HEIGHT_MULTIPLIER_OPTIONS[height_multiplier_index]
 	tile_height =  (WIDTH // 4) * height_multiplier
 	
-	def __init__(self, x, y,height,horizontalPos,chord,color,win):
+	def __init__(self, x, y,height,horizontalPos,chord,color,win,is_rest):
 		super(Tile, self).__init__()
 
 		self.win = win
@@ -150,7 +161,7 @@ class Tile(pygame.sprite.Sprite):
 		self.color = color
 
 		self.ignore = False
-		self.rest = False
+		self.rest = is_rest
 
 		self.surface = pygame.Surface((TILE_WIDTH, height), pygame.SRCALPHA)
 		self.rect = self.surface.get_rect()
@@ -168,11 +179,12 @@ class Tile(pygame.sprite.Sprite):
 
 	def update(self):
 		self.rect.y += self.speed
-
-		if not self.ignore:
-			pygame.draw.rect(self.surface, self.color, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
+		self.surface = pygame.Surface((TILE_WIDTH, self.height * Tile.height_multiplier), pygame.SRCALPHA)
+		self.rect.height = self.height * Tile.height_multiplier
+		if not self.ignore and not self.rest:
+			pygame.draw.rect(self.surface, self.color, (0,0, TILE_WIDTH, self.height * Tile.height_multiplier),border_radius=TILE_WIDTH)
 		elif self.rest:
-			pygame.draw.rect(self.surface, SCREEN_COLOR, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
+			pass
 		else:
 			pygame.draw.rect(self.surface, SCREEN_COLOR, (0,0, TILE_WIDTH, self.height),border_radius=TILE_WIDTH)
 
@@ -189,6 +201,14 @@ class Tile(pygame.sprite.Sprite):
 			Tile.current_chord[0] += 1
 			Tile.current_chord[1] = 0
 		#print("tile current chord after next_chord %s" % (Tile.current_chord))
+	def get_last_chord_index(song): #returns a 2d array representing the [measure,chord] where the last chord is located
+		last_chord = copy.deepcopy(Tile.current_chord)
+		if Tile.current_chord[1] - 1 < 0 and Tile.current_chord[0] - 1 >= 0: #going back a measure
+			last_chord[0] -= 1
+			last_chord[1] = len(song.measures[Tile.current_chord[0]-1].chords) - 1
+		if Tile.current_chord[1] - 1 >= 0: #going back a chord within the same measure
+			last_chord[1] -= 1
+		return last_chord
 
 	def reset():
 		Tile.current_chord[0] = 0
@@ -340,6 +360,14 @@ class Keyboard:
 		
 	def get_current_chord(self):
 		return self.current_chord
+	def get_next_chord_index(self,song):
+		next_chord_index = copy.deepcopy(self.current_chord)
+		if self.current_chord[1] + 1 < len(song.measures[self.current_chord[0]].chords): 
+			next_chord_index[1] += 1
+		elif self.current_chord[0] + 1 < len(song.measures):
+			next_chord_index[0] += 1
+			next_chord_index[1] = 0
+		return next_chord_index
 
     
 

@@ -1,6 +1,7 @@
 import abc
 import json
 from pickle import MEMOIZE
+import sys
 
 import pygame
 from objects import *
@@ -81,21 +82,29 @@ class PlayingState(GameState):
         super().__init__(game_state_manager)
         self.screen = screen
         self.screen.tiles.append(create_tile(self.screen.surface,song.measures[0].chords[0],[0,0],song,False))
+        Tile.last_spawn_time = pygame.time.get_ticks()
         self.keyboard = keyboard
         self.song = song
     def update(self):
         for tile in self.screen.tiles:
             tile.update()
-            if pygame.time.get_ticks()- Tile.lastSpawnTime > NOTE_SPAWN_DELAY and abs(tile.rect.y) <= tile.speed/2: #if the tile has passed the threshold at the bottom of the screen spawn another one
+            last_chord = Tile.get_last_chord_index(self.song)
+            last_chord_duration_in_ms = self.song.measures[last_chord[0]].chords[last_chord[1]].duration * (1/self.song.bpm) * 60 * 1000
+            #print("last chord duration in ms: " + str(last_chord_duration_in_ms))
+            #print("time since last tile spawn: " + str(pygame.time.get_ticks()- Tile.last_spawn_time))
+            if pygame.time.get_ticks()- Tile.last_spawn_time >= last_chord_duration_in_ms: #if the tile has passed the threshold at the bottom of the screen spawn another one
                 if len(self.song.measures[Tile.current_chord[0]].chords[Tile.current_chord[1]].notes) > 0 and Tile.current_chord[0] < len(self.song.measures) and Tile.current_chord[1] < len(self.song.measures[Tile.current_chord[0]].chords):
                     self.screen.tiles.append(create_tile(self.screen.surface,self.song.measures[Tile.current_chord[0]].chords[Tile.current_chord[1]],Tile.current_chord,self.song,True))
-                    print("TILE SPEED %f" % (Tile.speed))
-                    Tile.lastSpawnTime = pygame.time.get_ticks()
-            if not tile.ignore and tile.rect.top > HEIGHT: #if the player has not interacted with a certain tile and it has passed the threshold, then the player has lost
+                    #print("TILE SPEED %f" % (Tile.speed))
+                    Tile.last_spawn_time = pygame.time.get_ticks()
+            if not tile.ignore and not tile.rest and tile.rect.top > HEIGHT: #if the player has not interacted with a certain tile and it has passed the threshold, then the player has lost
                 self.game_state_manager.add_state(GameOverState(self.game_state_manager,self.screen.surface))
-            if tile.rest and abs(HEIGHT - tile.rect.top) <= tile.speed/2 and pygame.time.get_ticks() - Tile.lastBeatUpdate > BEAT_UPDATE_DELAY: #if a rest cross the threshold, still advance the song
-                self.keyboard.next_chord(self.song)
-                Tile.lastBeatUpdate = pygame.time.get_ticks()
+            if tile.rest:
+                next_chord = self.keyboard.get_next_chord_index(self.song)
+                next_rest_duration = self.song.measures[next_chord[0]].chords[next_chord[1]].duration * (1/self.song.bpm) * 60 * 1000
+                if abs(HEIGHT - tile.rect.bottom) <= tile.speed/2 and pygame.time.get_ticks() - Tile.last_beat_update > next_rest_duration: #if a rest cross the threshold, still advance the song
+                    self.keyboard.next_chord(self.song)
+                    Tile.last_beat_update = pygame.time.get_ticks()
     def event_loop_update(self,event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q or event.key == pygame.K_w or event.key == pygame.K_e or event.key == pygame.K_r:
@@ -127,52 +136,61 @@ class GameOverState(GameState):
     def __init__(self,game_state_manager,win):
         super().__init__(game_state_manager)
         self.win = win
-        self.screen_elements = []
-        self.screen_elements.append(ImageScreenElement(len(self.screen_elements)+1,"gameover.jpg",self.win))
-        self.screen_elements.append(TextDisplay("GAME OVER",len(self.screen_elements)+1,self.win))
-        self.screen_elements.append(Button("RETRY?",len(self.screen_elements)+1,self.win,placeholder()))
-        self.screen_elements.append(Button("MAIN MENU",len(self.screen_elements)+1,self.win,None))
-    
-    def update(self):
-        for element in self.screen_elements:
-            element.draw()
-            
+        
 
-    def event_loop_update(self,event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            for element in self.screen_elements:
-                if isinstance(element,Button) and element.rect.collidepoint(pygame.mouse.get_pos()): #is it a button?
-                    if element.y_pos == GameOverState.MAIN_MENU_Y_POS:
-                        #this will clear the states stack and create a new main menu state
-                        element.return_click_function_val(self.game_state_manager,MenuState(self.win,self.game_state_manager))
+    def update(self):
+        choice = None
+        while choice == None or choice == "Settings":
+            go_choices = ["Quit","Try Again!","Settings","Main Menu"]
+            choice = easygui.buttonbox(msg="Game over!",choices = go_choices)
+            if choice == go_choices[0]:
+                sys.exit()
+            elif choice == go_choices[1]:
+                last_song = None
+                for state in self.game_state_manager.states:
+                    if isinstance(state,PlayingState):
+                        last_song = state.song
+                Tile.reset()
+                self.game_state_manager.clear_states()
+                self.game_state_manager.add_state(PlayingState(last_song,Screen(self.win),Keyboard(),self.game_state_manager))
+            elif choice == go_choices[2]:
+                self.game_state_manager.add_state(SettingsMenuState(self.game_state_manager))
+    def event_loop_update(self, event):
+        pass
+    
 
 class SettingsMenuState(GameState):
 
     TILE_HEIGHT_MULTIPLIER_Y_POS = 3
     BACK_Y_POS = 5
 
-    def __init__(self, game_state_manager,win) -> None:
+    def __init__(self, game_state_manager) -> None:
         super().__init__(game_state_manager)
-        self.win = win
-        self.screen_elements = []
-        self.screen_elements.append(ImageScreenElement(len(self.screen_elements)+1,"settings_icon.png",self.win))
-        self.screen_elements.append(TextDisplay("SETTINGS",len(self.screen_elements)+1,self.win))
-        self.screen_elements.append(Button("TILE HEIGHT MULTIPLIER:",len(self.screen_elements)+1,self.win,placeholder()))
-        self.screen_elements.append(TextDisplay(f"x{Tile.height_multiplier}",len(self.screen_elements)+1,self.win))
-        self.screen_elements.append(Button("BACK",len(self.screen_elements)+1,self.win,placeholder()))
+        choice = None
+        while choice != "Back":
+            settings_choices = ["Change BPM","Change Tile Height","Back"]
+            choice = easygui.buttonbox("What setting would you like to modify?",choices = settings_choices)
+            if choice == settings_choices[0]:
+                for state in game_state_manager.states:
+                    if isinstance(state,PlayingState):
+                        new_bpm = easygui.integerbox(msg="Enter new BPM. Original BPM = " + str(state.song.bpm),upperbound= None)
+                        state.song.bpm = new_bpm
+            elif choice == settings_choices[1]:
+                mult = easygui.integerbox(msg="Enter Tile height multiplier:",upperbound=None)
+                Tile.height_multiplier = mult
+                bpm = None
+                for state in game_state_manager.states:
+                    if isinstance(state,PlayingState):
+                        bpm = state.song.bpm
+                Tile.speed = get_tile_speed(bpm,Tile.tile_height*mult)
+                print("Tile height multiplier changed to: " + str(Tile.height_multiplier))
+        game_state_manager.back_one_state()
+
 
     def update(self):
-        for element in self.screen_elements:
-            element.draw()
+        pass
     
     def event_loop_update(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            for element in self.screen_elements:
-                if isinstance(element,Button) and element.rect.collidepoint(pygame.mouse.get_pos()):
-                    if element.y_pos == SettingsMenuState.TILE_HEIGHT_MULTIPLIER_Y_POS:
-                        Tile.next_multiplier_option()
-                        update_text_on_text_display(self.screen_elements[3],f"x{Tile.height_multiplier}")
-                    elif element.y_pos == SettingsMenuState.BACK_Y_POS:
-                        self.game_state_manager.back_one_state()
+        pass
 
             

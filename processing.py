@@ -10,7 +10,7 @@ def myround(x, base=5):
     return int(base * round(float(x)/base))
 
 
-def writeJSON(song):
+def write_json(song):
     measuresSerializable = []
     for i in range(0,len(song.measures)):
         measuresSerializable.append("")
@@ -21,7 +21,7 @@ def writeJSON(song):
         song.name : measuresSerializable
     }
     json_object = json.dumps(dictionary, indent = 1)
-    with open(os.getenv("APPDATA") + "\\XMLtoJSONConverter\\output\\" + song.name + ".json","w") as outfile:
+    with open(os.getenv("APPDATA") + "\\PianoTilesKeith\\output\\" + song.name + ".json","w") as outfile:
         outfile.write(json_object)
 
 
